@@ -1,0 +1,98 @@
+##############################
+# Python / FastAPI
+##############################
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python tools
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+coverage.xml
+htmlcov/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+##############################
+# Environment / Secrets
+##############################
+.env
+.env.*
+*.env
+*.key
+*.pem
+
+##############################
+# Logs / Runtime files
+##############################
+*.log
+*.pid
+
+##############################
+# Local data / JSON store
+##############################
+tasks.json
+*.sqlite3
+
+##############################
+# Docker
+##############################
+# Ignore local docker override files
+docker-compose.override.yml
+
+# Ignore Docker volumes (if you create local folders)
+docker-data/
+mysql-data/
+postgres-data/
+volumes/
+
+##############################
+# Jenkins
+##############################
+# Jenkins workspace/build artifacts (should not be committed)
+jenkins_home/
+workspace/
+*.war
+
+##############################
+# SonarQube / Sonar Scanner
+##############################
+.sonar/
+.scannerwork/
+sonar-report.json
+sonar-project.properties.local
+
+##############################
+# Node (if frontend later)
+##############################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+##############################
+# IDE / Editor
+##############################
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+##############################
+# OS files
+##############################
+.DS_Store
+Thumbs.db
