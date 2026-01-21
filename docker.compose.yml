@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    networks:
+      - devops-net
+
+  jenkins:
+    build: ./jenkins
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devops-net
+
+  fastapi:
+    build: .
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    networks:
+      - devops-net
+
+networks:
+  devops-net:
+
+volumes:
+  jenkins_home:
