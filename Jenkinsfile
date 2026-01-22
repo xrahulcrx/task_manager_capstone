@@ -33,10 +33,7 @@ pipeline {
                         
                         # For [project] format, use pip install instead
                         # Or configure Poetry to handle it
-                        pip install -e .
-                        
-                        # Alternative: Install test dependencies
-                        pip install pytest pytest-asyncio
+                        poetry init -n
                     '''
                 }
             }
