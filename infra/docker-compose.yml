@@ -1,7 +1,6 @@
 services:
-  # SonarQube
   sonarqube:
-    image: sonarqube:community
+    image: sonarqube:lts-community
     container_name: sonarqube
     ports:
       - "9000:9000"
@@ -11,9 +10,10 @@ services:
       - devops-net
     restart: unless-stopped
 
-  # Jenkins
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: jenkins/Dockerfile
     container_name: jenkins
     ports:
       - "8080:8080"
