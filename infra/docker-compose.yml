@@ -9,6 +9,7 @@ services:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
     networks:
       - devops-net
+    restart: unless-stopped
 
   # Jenkins
   jenkins:
