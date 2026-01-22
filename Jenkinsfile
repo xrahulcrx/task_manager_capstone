@@ -7,7 +7,7 @@ pipeline {
         DOCKER_USER = "rahulcrx"
         IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
         IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
-        SONAR_HOST_URL = "http://sonarqube:9000"
+        SONAR_HOST_URL = "http://localhost:9000"
     }
 
     stages {
