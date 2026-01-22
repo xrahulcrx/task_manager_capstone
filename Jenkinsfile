@@ -33,7 +33,8 @@ pipeline {
                         
                         # For [project] format, use pip install instead
                         # Or configure Poetry to handle it
-                        poetry init -n
+                        poetry install --no-interaction --no-ansi || true
+
                     '''
                 }
             }
@@ -42,7 +43,6 @@ pipeline {
         stage("Run Tests") {
             steps {
                 sh """
-                poetry install --no-interaction --no-ansi || true
                 poetry run pytest -v
                 """
             }
