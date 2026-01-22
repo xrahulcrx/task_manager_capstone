@@ -2,17 +2,21 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import sqlite3
+import os
 
 app = FastAPI(title="Task Manager API (SQLite)")
 
-DB_FILE = "tasks.db"
+DB_FILE = "data/tasks.db"
+os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
+
 
 
 # ---------- DB HELPERS ----------
 def get_connection():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row  # makes rows behave like dict
+    conn = sqlite3.connect(DB_FILE, check_same_thread=False, timeout=10)
+    conn.row_factory = sqlite3.Row
     return conn
+
 
 
 def init_db():

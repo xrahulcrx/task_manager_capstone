@@ -1,16 +1,18 @@
-version: "3.9"
-
 services:
+  # SonarQube
   sonarqube:
-    image: sonarqube:lts-community
+    image: sonarqube:community
     container_name: sonarqube
     ports:
       - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
     networks:
       - devops-net
 
+  # Jenkins
   jenkins:
-    build: ./jenkins
+    image: jenkins/jenkins:lts
     container_name: jenkins
     ports:
       - "8080:8080"
@@ -20,14 +22,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - devops-net
-
-  fastapi:
-    build: .
-    container_name: fastapi-app
-    ports:
-      - "8000:8000"
-    networks:
-      - devops-net
+    restart: unless-stopped
 
 networks:
   devops-net:
