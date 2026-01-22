@@ -26,6 +26,10 @@ RUN curl -sSLo /tmp/sonar.zip https://binaries.sonarsource.com/Distribution/sona
     && ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner \
     && rm /tmp/sonar.zip
 
+# CRITICAL: Add jenkins user to docker group
+RUN groupadd -g 999 docker || true \
+    && usermod -aG docker jenkins
+
 # Switch back to jenkins user
 USER jenkins
 
