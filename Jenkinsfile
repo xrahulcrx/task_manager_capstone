@@ -8,7 +8,7 @@ pipeline {
     environment {
         APP_NAME   = "task-manager-fastapi"
         RELEASE    = "1.0.0"
-        IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_NAME = "${DOCKERHUB_USER}/${APP_NAME}"
         IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
         SONAR_HOST_URL = "http://sonarqube:9000"
         SONAR_BROWSER_URL = "http://localhost:9000"
