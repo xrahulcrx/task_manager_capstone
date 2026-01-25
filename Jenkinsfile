@@ -73,7 +73,7 @@ pipeline {
                         sonar-scanner \
                           -Dsonar.projectKey=${APP_NAME} \
                           -Dsonar.sources=. \
-                          -Dsonar.host.url=  // Optional: auto-injected by withSonarQubeEnv
+                          -Dsonar.host.url=.
                     '''
                 }
             }
