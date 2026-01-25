@@ -55,22 +55,20 @@ pipeline {
         }
 
         stage("DockerHub Login (for build + push)") {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
-                    // Store the username in an environment variable
-                    script {
-                        env.DOCKER_USER = "${DOCKERHUB_USER}"
-                        env.IMAGE_NAME = "${DOCKERHUB_USER}/${APP_NAME}"
+            script{
+                    steps {
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) 
+                        {
+                            sh '''
+                                echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                                echo "Logged into Docker Hub as: ${DOCKERHUB_USER}"
+                            '''
+                            // Save variables to file
+                            sh """
+                            echo "IMAGE_NAME=${DOCKERHUB_USER}/${APP_NAME}" > docker_vars.txt
+                            """
+                        }
                     }
-                    sh '''
-                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                        echo "Logged into Docker Hub as: ${DOCKERHUB_USER}"
-                    '''
-                }
             }
         }
 
@@ -78,9 +76,10 @@ pipeline {
             steps {                
                 script{
                     sh """
-                        echo "Building image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-                        docker build -t ${env.IMAGE_NAME}:${env.IMAGE_TAG} .
-                        docker tag ${env.IMAGE_NAME}:${env.IMAGE_TAG} ${env.IMAGE_NAME}:latest
+                        source docker_vars.txt
+                        echo "Building image: ${IMAGE_NAME}:${IMAGE_TAG}"
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
                         echo "Image built successfully"
                     """
                 }
@@ -111,8 +110,8 @@ pipeline {
         stage("Push Docker Image") {
             steps {
                     sh """
-                    docker push ${env.IMAGE_NAME}:${env.IMAGE_TAG}
-                    docker push ${env.IMAGE_NAME}:latest
+                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    docker push ${IMAGE_NAME}:latest
                     echo "Image pushed successfully"
                     """
             }
@@ -121,7 +120,7 @@ pipeline {
 
     post {
         success {
-            echo "🎉 Pipeline completed successfully!"
+            echo "Pipeline completed successfully!"
             script {
                 currentBuild.description = "Build ${BUILD_NUMBER}"
             }
