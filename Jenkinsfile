@@ -130,19 +130,19 @@ pipeline {
                 )]) {
                     sh '''
                         set -eux
-        
+
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
-        
+
                         # Ensure cluster exists
                         k3d cluster list | grep -q devops-cluster || \
                           k3d cluster create devops-cluster --api-port 6550 -p "30080:30080@loadbalancer"
-        
+
                         # Replace image placeholder in deployment yaml
                         sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
-        
+
                         kubectl apply -f k8s/deployment.final.yaml
                         kubectl apply -f k8s/service.yaml
-        
+
                         kubectl rollout status deployment/task-manager
                     '''
                 }
@@ -153,7 +153,8 @@ pipeline {
 
         stage("App Link") {
             steps {
-                echo "App URL: http://localhost:30080"
+                echo "App URL: http://localhost:30080/docs"
+                echo "Tasks URL: http://localhost:30080/tasks"
             }
         }
     }
