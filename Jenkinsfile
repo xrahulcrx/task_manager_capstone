@@ -46,18 +46,24 @@ pipeline {
 
         stage("Run Tests") {
             steps {
-                sh """
-                poetry run pytest -v
-                """
+                script{
+                    sh """
+                        poetry run pytest -v
+                    """
+                }
+
             }
         }
 
         stage("Build Docker Image") {
             steps {
-                sh """
-                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                """
+                script{
+                    sh """
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                    """
+                }
+
             }
         }
 
