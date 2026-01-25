@@ -2,27 +2,28 @@ pipeline {
     agent any
 
     options {
-        skipDefaultCheckout false
-        timeout(time: 15, unit: 'MINUTES')
+        skipDefaultCheckout true
     }
 
     environment {
-        APP_NAME   = "task-manager-fastapi"
-        RELEASE    = "1.0"
-        IMAGE_TAG  = "${RELEASE}.${BUILD_NUMBER}"
+        APP_NAME          = "task-manager-fastapi"
+        RELEASE           = "1.0.0"
+        IMAGE_TAG         = "${RELEASE}-${BUILD_NUMBER}"
+
+        // Jenkins container → SonarQube container
+        SONAR_HOST_URL    = "http://sonarqube:9000"
+
+        // Browser link
+        SONAR_BROWSER_URL = "http://localhost:9000"
     }
 
     stages {
         stage("Cleanup Workspace") {
-            steps {
-                cleanWs()
-            }
+            steps { cleanWs() }
         }
 
         stage("Checkout") {
-            steps {
-                checkout scm
-            }
+            steps { checkout scm }
         }
 
         stage("Install Dependencies") {
@@ -44,45 +45,57 @@ pipeline {
             }
         }
 
-        stage("Build Docker Image") {
+        stage("DockerHub Login") {
             steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKERHUB_USER',
-                        passwordVariable: 'DOCKERHUB_PASS'
-                    )]) {
-                        env.IMAGE_NAME = "${DOCKERHUB_USER}/${env.APP_NAME}"
-                    }
-                }
-                sh '''
-                    set -euxo pipefail
-                    echo "Building image: ${IMAGE_NAME}:${IMAGE_TAG}"
-                    docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" .
-                    docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${IMAGE_NAME}:latest"
-                '''
-            }
-        }
-
-        stage("SonarQube Scan") {
-            steps {
-                // Requires SonarQube server configured in Jenkins as "SonarQube"
-                withSonarQubeEnv('SonarQube') {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
                     sh '''
                         set -euxo pipefail
-                        sonar-scanner \
-                          -Dsonar.projectKey=${APP_NAME} \
-                          -Dsonar.sources=. \
+                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
                     '''
                 }
             }
         }
 
-        stage("Wait for Quality Gate") {
+        stage("Build Docker Image") {
             steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh '''
+                        set -euxo pipefail
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+                        echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
+                        docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                        docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+                    '''
                 }
+            }
+        }
+
+        stage("SonarQube Scan") {
+            steps {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                        set -euxo pipefail
+                        sonar-scanner \
+                          -Dsonar.projectKey=$APP_NAME \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.token=$SONAR_TOKEN
+                    '''
+                }
+            }
+        }
+
+        stage("Show SonarQube Dashboard Link") {
+            steps {
+                echo "SonarQube Dashboard: ${SONAR_BROWSER_URL}/dashboard?id=${APP_NAME}"
             }
         }
 
@@ -95,10 +108,10 @@ pipeline {
                 )]) {
                     sh '''
                         set -euxo pipefail
-                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                        echo "Pushing image: ${IMAGE_NAME}:${IMAGE_TAG}"
-                        docker push "${IMAGE_NAME}:${IMAGE_TAG}"
-                        docker push "${IMAGE_NAME}:latest"
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+                        echo "Pushing image: $IMAGE_NAME:$IMAGE_TAG"
+                        docker push $IMAGE_NAME:$IMAGE_TAG
+                        docker push $IMAGE_NAME:latest
                     '''
                 }
             }
@@ -106,20 +119,7 @@ pipeline {
     }
 
     post {
-        success {
-            echo "Pipeline completed successfully!"
-            script {
-                currentBuild.description = "Success: Build ${BUILD_NUMBER}"
-            }
-        }
-        failure {
-            echo "Pipeline failed!"
-            script {
-                currentBuild.description = "Failed: Build ${BUILD_NUMBER}"
-            }
-        }
-        always {
-            cleanWs()
-        }
+        success { echo "Pipeline completed successfully!" }
+        failure { echo "Pipeline failed!" }
     }
 }
