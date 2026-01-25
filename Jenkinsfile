@@ -7,8 +7,8 @@ pipeline {
 
     environment {
         APP_NAME          = "task-manager-fastapi"
-        RELEASE           = "1.0.0"
-        IMAGE_TAG         = "${RELEASE}-${BUILD_NUMBER}"
+        RELEASE           = "1.0"
+        IMAGE_TAG         = "${RELEASE}.${BUILD_NUMBER}"
 
         // Jenkins container → SonarQube container
         SONAR_HOST_URL    = "http://sonarqube:9000"
