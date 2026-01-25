@@ -55,7 +55,8 @@ pipeline {
 
         stage("DockerHub Login (for build + push)") {
             steps{
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) 
+                script{
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) 
                     {
                         sh '''
                             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
@@ -66,6 +67,7 @@ pipeline {
                         echo "IMAGE_NAME=${DOCKERHUB_USER}/${APP_NAME}" > docker_vars.txt
                         echo "Image: ${DOCKERHUB_USER}/${APP_NAME}:${IMAGE_TAG}"
                         '''
+                    }
                 }
             }
         }
