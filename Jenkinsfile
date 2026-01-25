@@ -123,23 +123,33 @@ pipeline {
 
         stage("Deploy to k3d") {
             steps {
-                sh '''
-                    set -eux
-                    . ./image.env
-
-                    # Ensure cluster exists
-                    k3d cluster list | grep devops-cluster || k3d cluster create devops-cluster --api-port 6550 -p "30080:30080@loadbalancer"
-
-                    # Replace image placeholder
-                    sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
-
-                    kubectl apply -f k8s/deployment.final.yaml
-                    kubectl apply -f k8s/service.yaml
-
-                    kubectl rollout status deployment/task-manager
-                '''
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh '''
+                        set -eux
+        
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+        
+                        # Ensure cluster exists
+                        k3d cluster list | grep -q devops-cluster || \
+                          k3d cluster create devops-cluster --api-port 6550 -p "30080:30080@loadbalancer"
+        
+                        # Replace image placeholder in deployment yaml
+                        sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
+        
+                        kubectl apply -f k8s/deployment.final.yaml
+                        kubectl apply -f k8s/service.yaml
+        
+                        kubectl rollout status deployment/task-manager
+                    '''
+                }
             }
         }
+
+        
 
         stage("App Link") {
             steps {
