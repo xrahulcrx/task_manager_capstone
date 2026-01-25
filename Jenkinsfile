@@ -119,8 +119,9 @@ pipeline {
 
         stage("Push Docker Image") {
             steps {
-                    . docker_vars.txt
+                    
                     sh '''
+                    . docker_vars.txt
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
                     docker push ${IMAGE_NAME}:latest
                     echo "Image pushed successfully"
