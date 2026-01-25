@@ -3,14 +3,13 @@ pipeline {
 
     environment {
         APP_NAME   = "task-manager-fastapi"
-        RELEASE    = "1.0.0"
-        IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
+        RELEASE    = "1.0"
+        IMAGE_TAG  = "${RELEASE}.${BUILD_NUMBER}"
         SONAR_HOST_URL = "http://sonarqube:9000"
         SONAR_BROWSER_URL = "http://localhost:9000"
     }
 
     stages {
-
         stage("Cleanup Workspace") {
             steps { cleanWs() }
         }
@@ -23,7 +22,7 @@ pipeline {
             steps {
                 sh '''
                     poetry --version
-                    poetry install --no-interaction --no-ansi || true
+                    poetry install --no-interaction --no-ansi
                 '''
             }
         }
@@ -44,8 +43,8 @@ pipeline {
                     passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
                     sh '''
-                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                        echo "✅ Logged into DockerHub as $DOCKERHUB_USER"
+                        echo "${DOCKERHUB_PASS}" | docker login -u "${DOCKERHUB_USER}" --password-stdin
+                        echo "✅ Logged into DockerHub as ${DOCKERHUB_USER}"
                     '''
                 }
             }
@@ -58,13 +57,14 @@ pipeline {
                     usernameVariable: 'DOCKERHUB_USER',
                     passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
-                    sh '''
-                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
-                        echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
+                    sh """
+                        IMAGE_NAME="\${DOCKERHUB_USER}/${APP_NAME}"
+                        echo "Building image: \${IMAGE_NAME}:${IMAGE_TAG}"
 
-                        docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                        docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-                    '''
+                        docker build -t \${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker tag \${IMAGE_NAME}:${IMAGE_TAG} \${IMAGE_NAME}:latest
+                        echo "✅ Image built successfully"
+                    """
                 }
             }
         }
@@ -72,13 +72,13 @@ pipeline {
         stage("SonarQube Scan") {
             steps {
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh '''
+                    sh """
                         sonar-scanner \
-                          -Dsonar.projectKey=$APP_NAME \
+                          -Dsonar.projectKey=${APP_NAME} \
                           -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONAR_HOST_URL \
-                          -Dsonar.token=$SONAR_TOKEN
-                    '''
+                          -Dsonar.host.url=${SONAR_HOST_URL} \
+                          -Dsonar.token=\${SONAR_TOKEN}
+                    """
                 }
             }
         }
@@ -96,14 +96,30 @@ pipeline {
                     usernameVariable: 'DOCKERHUB_USER',
                     passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
-                    sh '''
-                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+                    sh """
+                        IMAGE_NAME="\${DOCKERHUB_USER}/${APP_NAME}"
 
-                        echo "Pushing image: $IMAGE_NAME:$IMAGE_TAG"
-                        docker push $IMAGE_NAME:$IMAGE_TAG
-                        docker push $IMAGE_NAME:latest
-                    '''
+                        echo "Pushing image: \${IMAGE_NAME}:${IMAGE_TAG}"
+                        docker push \${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push \${IMAGE_NAME}:latest
+                        echo "✅ Images pushed successfully!"
+                    """
                 }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo '🎉 Pipeline completed successfully!'
+            script {
+                currentBuild.description = "✅ Build ${BUILD_NUMBER}"
+            }
+        }
+        failure {
+            echo '❌ Pipeline failed'
+            script {
+                currentBuild.description = "❌ Build ${BUILD_NUMBER}"
             }
         }
     }
