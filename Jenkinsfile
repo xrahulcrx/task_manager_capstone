@@ -80,7 +80,7 @@ pipeline {
                     sh """
                         echo "Building image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                         docker build -t ${env.IMAGE_NAME}:${env.IMAGE_TAG} .
-                        docker tag ${env.IMAGE_NAME}:${env.IMAGE_TAG} ${env.IMAGE_TAG}:latest
+                        docker tag ${env.IMAGE_NAME}:${env.IMAGE_TAG} ${env.IMAGE_NAME}:latest
                         echo "Image built successfully"
                     """
                 }
@@ -111,9 +111,9 @@ pipeline {
         stage("Push Docker Image") {
             steps {
                     sh """
-                    IMAGE_NAME=\$DOCKERHUB_USER/${APP_NAME}
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
                     docker push ${IMAGE_NAME}:latest
+                    echo "Image pushed successfully"
                     """
             }
         }  
