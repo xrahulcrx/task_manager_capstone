@@ -70,6 +70,16 @@ pipeline {
 
         stage("Build Docker Image") {
             steps {
+
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh '''
+                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                    '''
+                
                 script{
                     sh """
                         IMAGE_NAME=\$DOCKERHUB_USER/${APP_NAME}
