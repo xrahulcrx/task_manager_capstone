@@ -104,6 +104,7 @@ pipeline {
         stage("Push Docker Image") {
             steps {
                     sh """
+                    IMAGE_NAME=\$DOCKERHUB_USER/${APP_NAME}
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
                     docker push ${IMAGE_NAME}:latest
                     """
