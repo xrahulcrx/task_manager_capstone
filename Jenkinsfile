@@ -62,8 +62,10 @@ pipeline {
                     passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
                     // Store the username in an environment variable
-                    env.DOCKER_USER = "${DOCKERHUB_USER}"
-                    env.IMAGE_NAME = "${DOCKERHUB_USER}/${APP_NAME}"
+                    script {
+                        env.DOCKER_USER = "${DOCKERHUB_USER}"
+                        env.IMAGE_NAME = "${DOCKERHUB_USER}/${APP_NAME}"
+                    }
                     sh '''
                         echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
                         echo "Logged into Docker Hub as: ${DOCKERHUB_USER}"
