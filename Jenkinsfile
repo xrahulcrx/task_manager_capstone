@@ -61,31 +61,25 @@ pipeline {
                     usernameVariable: 'DOCKERHUB_USER',
                     passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
+                    // Store the username in an environment variable
+                    env.DOCKER_USER = "${DOCKERHUB_USER}"
+                    env.IMAGE_NAME = "${DOCKERHUB_USER}/${APP_NAME}"
                     sh '''
                         echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                        echo "Logged into Docker Hub as: ${DOCKERHUB_USER}"
                     '''
                 }
             }
         }
 
         stage("Build Docker Image") {
-            steps {
-
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
-                    sh '''
-                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                    '''
-                }
-                
+            steps {                
                 script{
                     sh """
-                        IMAGE_NAME=\$DOCKERHUB_USER/${APP_NAME}
-                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                        echo "Building image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                        docker build -t ${env.IMAGE_NAME}:${env.IMAGE_TAG} .
+                        docker tag ${env.IMAGE_NAME}:${env.IMAGE_TAG} ${env.IMAGE_TAG}:latest
+                        echo "Image built successfully"
                     """
                 }
 
@@ -120,7 +114,22 @@ pipeline {
                     docker push ${IMAGE_NAME}:latest
                     """
             }
+        }  
+    }
+
+    post {
+        success {
+            echo "🎉 Pipeline completed successfully!"
+            script {
+                currentBuild.description = "Build ${BUILD_NUMBER}"
+            }
         }
-        
+
+        failure {
+            echo "Pipeline failed"
+            script {
+                currentBuild.description = "Build ${BUILD_NUMBER}"
+            }
+        }
     }
 }
