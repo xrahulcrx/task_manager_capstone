@@ -8,7 +8,6 @@ pipeline {
     environment {
         APP_NAME   = "task-manager-fastapi"
         RELEASE    = "1.0.0"
-        IMAGE_NAME = "${DOCKERHUB_USER}/${APP_NAME}"
         IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
         SONAR_HOST_URL = "http://sonarqube:9000"
         SONAR_BROWSER_URL = "http://localhost:9000"
@@ -73,6 +72,7 @@ pipeline {
             steps {
                 script{
                     sh """
+                        IMAGE_NAME=\$DOCKERHUB_USER/${APP_NAME}
                         docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                         docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
                     """
