@@ -12,6 +12,7 @@ pipeline {
         IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
         IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
         SONAR_HOST_URL = "http://localhost:9000"
+        SONAR_BROWSER_URL = "http://localhost:9000"
     }
 
     stages {
@@ -74,7 +75,7 @@ pipeline {
                     sonar-scanner \
                       -Dsonar.projectKey=${APP_NAME} \
                       -Dsonar.sources=. \
-                      -Dsonar.host.url=${SONAR_HOST_URL} \
+                      -Dsonar.host.url=${SONAR_BROWSER_URL} \
                       -Dsonar.token=${SONAR_TOKEN}
                     """
                 }
