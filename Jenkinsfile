@@ -75,7 +75,7 @@ pipeline {
                     sonar-scanner \
                       -Dsonar.projectKey=${APP_NAME} \
                       -Dsonar.sources=. \
-                      -Dsonar.host.url=${SONAR_BROWSER_URL} \
+                      -Dsonar.host.url=${SONAR_HOST_URL} \
                       -Dsonar.token=${SONAR_TOKEN}
                     """
                 }
