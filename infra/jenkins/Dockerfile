@@ -18,6 +18,7 @@ ENV POETRY_HOME="/opt/poetry"
 ENV PATH="${POETRY_HOME}/bin:${PATH}"
 RUN curl -sSL https://install.python-poetry.org | python3 - \
     && chmod +x ${POETRY_HOME}/bin/poetry
+RUN ln -s /usr/local/bin/poetry /usr/bin/poetry || true
 
 # Install Sonar Scanner CLI
 RUN curl -sSLo /tmp/sonar.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip \
