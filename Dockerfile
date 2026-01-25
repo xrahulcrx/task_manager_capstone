@@ -6,10 +6,11 @@ RUN pip install --no-cache-dir poetry
 
 COPY pyproject.toml poetry.lock* ./
 
+COPY . .
+
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
 
-COPY . .
 
 # Create DB folder inside container
 RUN mkdir -p /app/data
