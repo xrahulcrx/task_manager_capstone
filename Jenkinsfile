@@ -111,8 +111,8 @@ pipeline {
         stage("Push Docker Image") {
             steps {
                     sh """
-                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    docker push ${IMAGE_NAME}:latest
+                    docker push ${env.IMAGE_NAME}:${env.IMAGE_TAG}
+                    docker push ${env.IMAGE_NAME}:latest
                     echo "Image pushed successfully"
                     """
             }
