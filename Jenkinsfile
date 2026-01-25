@@ -10,9 +10,6 @@ pipeline {
         RELEASE           = "1.0"
         IMAGE_TAG         = "${RELEASE}.${BUILD_NUMBER}"
 
-        // Jenkins container → SonarQube container
-        SONAR_HOST_URL    = "http://sonarqube:9000"
-
         // Browser link
         SONAR_BROWSER_URL = "http://localhost:9000"
     }
@@ -80,15 +77,21 @@ pipeline {
 
         stage("SonarQube Scan") {
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                withSonarQubeEnv('sonarqube') {
                     sh '''
                         set -euxo pipefail
                         sonar-scanner \
                           -Dsonar.projectKey=$APP_NAME \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONAR_HOST_URL \
-                          -Dsonar.token=$SONAR_TOKEN
+                          -Dsonar.sources=.
                     '''
+                }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
