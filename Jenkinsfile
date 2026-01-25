@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout false  // Let Jenkins handle the checkout
+    }
+
     environment {
         APP_NAME   = "task-manager-fastapi"
         RELEASE    = "1.0.0"
