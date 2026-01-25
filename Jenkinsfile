@@ -76,7 +76,7 @@ pipeline {
             steps {                
                 script{
                     sh '''
-                        source docker_vars.txt
+                        . docker_vars.txt
                         echo "Building image: ${IMAGE_NAME}:${IMAGE_TAG}"
                         docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                         docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
