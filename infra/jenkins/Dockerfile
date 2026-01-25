@@ -31,6 +31,14 @@ RUN curl -sSLo /tmp/sonar.zip https://binaries.sonarsource.com/Distribution/sona
 RUN groupadd -g 999 docker || true \
     && usermod -aG docker jenkins
 
+# Install kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+    && rm -f kubectl
+
+# Install k3d
+RUN curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
 # Switch back to jenkins user
 USER jenkins
 
