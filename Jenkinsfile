@@ -55,20 +55,20 @@ pipeline {
         }
 
         stage("DockerHub Login (for build + push)") {
-            script{
-                    steps {
+            steps{
+                    script {
                         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) 
                         {
-                            sh '''
-                                echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                                echo "Logged into Docker Hub as: ${DOCKERHUB_USER}"
-                            '''
-                            // Save variables to file
-                            sh """
-                            echo "IMAGE_NAME=${DOCKERHUB_USER}/${APP_NAME}" > docker_vars.txt
-                            """
-                        }
+                        sh '''
+                            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                            echo "Logged into Docker Hub as: ${DOCKERHUB_USER}"
+                        '''
+                        // Save variables to file
+                        sh """
+                        echo "IMAGE_NAME=${DOCKERHUB_USER}/${APP_NAME}" > docker_vars.txt
+                        """
                     }
+                }
             }
         }
 
