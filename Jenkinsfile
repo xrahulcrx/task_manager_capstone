@@ -84,7 +84,7 @@ pipeline {
 
         stage("Show SonarQube Dashboard Link") {
             steps {
-                echo "✅ SonarQube Dashboard: ${SONAR_BROWSER_URL}/dashboard?id=${APP_NAME}"
+                echo "SonarQube Dashboard: ${SONAR_BROWSER_URL}/dashboard?id=${APP_NAME}"
             }
         }
 
