@@ -8,8 +8,8 @@ pipeline {
 
     environment {
         APP_NAME   = "task-manager-fastapi"
-        RELEASE    = "1.0.0"
-        IMAGE_TAG  = "${RELEASE}-${BUILD_NUMBER}"
+        RELEASE    = "1.0"
+        IMAGE_TAG  = "${RELEASE}.${BUILD_NUMBER}"
     }
 
     stages {
@@ -73,7 +73,6 @@ pipeline {
                         sonar-scanner \
                           -Dsonar.projectKey=${APP_NAME} \
                           -Dsonar.sources=. \
-                          -Dsonar.host.url=.
                     '''
                 }
             }
