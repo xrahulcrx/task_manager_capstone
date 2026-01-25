@@ -38,7 +38,6 @@ pipeline {
                         # For [project] format, use pip install instead
                         # Or configure Poetry to handle it
                         poetry install --no-interaction --no-ansi || true
-
                     '''
                 }
             }
