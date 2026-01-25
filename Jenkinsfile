@@ -75,6 +75,16 @@ pipeline {
         stage("Build Docker Image") {
             steps {                
                 script{
+
+                    sh '''
+                        if [ ! -f docker_vars.txt ]; then
+                            echo "docker_vars not found"
+                            exit 1
+                        fi 
+                    '''
+
+
+
                     sh '''
                         . docker_vars.txt
                         echo "Building image: ${IMAGE_NAME}:${IMAGE_TAG}"
@@ -109,6 +119,7 @@ pipeline {
 
         stage("Push Docker Image") {
             steps {
+                    . docker_vars.txt
                     sh '''
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
                     docker push ${IMAGE_NAME}:latest
@@ -131,6 +142,14 @@ pipeline {
             script {
                 currentBuild.description = "Build ${BUILD_NUMBER}"
             }
+        }
+        
+        always {
+            // Clean up temp file
+            sh '''
+                rm -f docker_vars.txt || true
+                echo "Pipeline finished"
+            '''
         }
     }
 }
