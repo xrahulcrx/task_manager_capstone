@@ -25,4 +25,4 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin d
 sudo usermod -aG docker $USER
 newgrp docker
 
-echo "Docker installed successfully."
+echo "Docker installed successfully. "
