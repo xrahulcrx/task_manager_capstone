@@ -28,8 +28,7 @@ RUN curl -sSLo /tmp/sonar.zip https://binaries.sonarsource.com/Distribution/sona
     && rm /tmp/sonar.zip
 
 # CRITICAL: Add jenkins user to docker group
-RUN groupadd -g 999 docker || true \
-    && usermod -aG docker jenkins
+RUN groupadd -g 999 docker || true && usermod -aG docker jenkins
 
 # Install kubectl
 RUN curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
