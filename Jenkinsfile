@@ -94,6 +94,36 @@ pipeline {
             }
         }
 
+        stage("Create k3d Cluster") {
+            steps {
+                sh '''
+                    set -euxo pipefail
+
+                    CLUSTER_NAME="devops-cluster"
+
+                    echo "Checking k3d cluster..."
+                    if k3d cluster list | grep -q "$CLUSTER_NAME"; then
+                      echo "Cluster already exists: $CLUSTER_NAME"
+                    else
+                      echo "Creating cluster: $CLUSTER_NAME"
+                      k3d cluster create "$CLUSTER_NAME" \
+                        --api-port 6550 \
+                        -p "30080:30080@loadbalancer"
+                    fi
+
+                    echo "Switching kubeconfig context..."
+                    k3d kubeconfig merge "$CLUSTER_NAME" --switch-context
+
+                    echo "Showing k3d docker containers:"
+                    docker ps | grep k3d || true
+
+                    echo "Kubernetes nodes:"
+                    kubectl get nodes
+                '''
+            }
+        }
+
+
 
         stage("Deploy to k3d") {
             steps {
