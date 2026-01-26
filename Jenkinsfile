@@ -104,30 +104,39 @@ pipeline {
 
         stage("Create k3d Cluster") {
             steps {
-                sh '''
-                    set -euxo pipefail
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]){
+                    sh '''
+                        set -euxo pipefail
 
-                    CLUSTER_NAME="devops-cluster"
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAM
 
-                    echo "Checking k3d cluster..."
-                    if k3d cluster list | grep -q "$CLUSTER_NAME"; then
-                      echo "Cluster already exists: $CLUSTER_NAME"
-                    else
-                      echo "Creating cluster: $CLUSTER_NAME"
-                      k3d cluster create "$CLUSTER_NAME" \
-                        --api-port 6550 \
-                        -p "30080:30080@loadbalancer" \
-                        --network devops-net
-                    fi
+                        CLUSTER_NAME="devops-cluster"
 
-                    k3d kubeconfig merge "$CLUSTER_NAME" --kubeconfig-switch-context
+                        echo "Checking k3d cluster..."
+                        if k3d cluster list | grep -q "$CLUSTER_NAME"; then
+                          echo "Cluster already exists: $CLUSTER_NAME"
+                        else
+                          echo "Creating cluster: $CLUSTER_NAME"
+                          k3d cluster create "$CLUSTER_NAME" \
+                            --api-port 6550 \
+                            --agents 1 \
+                            -p "30080:30080@loadbalancer" \
+                            --network devops-net
+                        fi
 
-                    echo "Current kubectl context:"
-                    kubectl config current-context
+                        # Replace image placeholder
+                        sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
 
-                    echo "Kubernetes nodes:"
-                    kubectl get nodes
-                '''
+                        kubectl apply -f k8s/deployment.final.yaml
+                        kubectl apply -f k8s/service.yaml
+
+                        kubectl rollout status deployment/task-manager --timeout=120s
+                    '''
+                }
             }
         }
 
