@@ -116,7 +116,8 @@ pipeline {
                       echo "Creating cluster: $CLUSTER_NAME"
                       k3d cluster create "$CLUSTER_NAME" \
                         --api-port 6550 \
-                        -p "30080:30080@loadbalancer"
+                        -p "30080:30080@loadbalancer" \
+                        --network devops-net
                     fi
 
                     k3d kubeconfig merge "$CLUSTER_NAME" --kubeconfig-switch-context
