@@ -65,13 +65,19 @@ pipeline {
 
         stage("Build Docker Image") {
             steps {
-                sh '''
-                    set -euxo pipefail
-                    IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
-                    echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
-                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                    docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-                '''
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]){
+                    sh '''
+                        set -euxo pipefail
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+                        echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
+                        docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                        docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+                    '''
+                }
             }
         }
 
