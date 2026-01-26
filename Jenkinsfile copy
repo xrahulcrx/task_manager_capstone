@@ -6,23 +6,21 @@ pipeline {
     }
 
     environment {
-        APP_NAME = "task-manager-fastapi"
-        RELEASE = "1.0"
-        IMAGE_TAG = "${RELEASE}.${BUILD_NUMBER}"
+        APP_NAME          = "task-manager-fastapi"
+        RELEASE           = "1.0"
+        IMAGE_TAG         = "${RELEASE}.${BUILD_NUMBER}"
+
+        // Browser link
         SONAR_BROWSER_URL = "http://localhost:9000"
     }
 
     stages {
         stage("Cleanup Workspace") {
-            steps { 
-                cleanWs() 
-            }
+            steps { cleanWs() }
         }
 
         stage("Checkout") {
-            steps { 
-                checkout scm 
-            }
+            steps { checkout scm }
         }
 
         stage("Install Dependencies") {
@@ -49,7 +47,9 @@ pipeline {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
                         set -euxo pipefail
-                        sonar-scanner -Dsonar.projectKey=$APP_NAME -Dsonar.sources=.
+                        sonar-scanner \
+                          -Dsonar.projectKey=$APP_NAME \
+                          -Dsonar.sources=.
                     '''
                 }
             }
@@ -69,7 +69,7 @@ pipeline {
                     credentialsId: 'dockerhub-creds',
                     usernameVariable: 'DOCKERHUB_USER',
                     passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
+                )]){
                     sh '''
                         set -euxo pipefail
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
@@ -90,43 +90,19 @@ pipeline {
                 )]) {
                     sh '''
                         set -euxo pipefail
+                        # === CRITICAL: LOGIN TO DOCKER HUB ===
                         echo "Logging into Docker Hub as user: $DOCKERHUB_USER"
                         echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
                         echo "Pushing image: $IMAGE_NAME:$IMAGE_TAG"
                         docker push $IMAGE_NAME:$IMAGE_TAG
                         docker push $IMAGE_NAME:latest
-                        docker logout
                     '''
                 }
             }
         }
 
         stage("Create k3d Cluster") {
-            steps {
-                sh '''
-                    set -euxo pipefail
-                    CLUSTER_NAME="devops-cluster"
-                    echo "Checking k3d cluster..."
-                    if k3d cluster list | grep -q "$CLUSTER_NAME"; then
-                      echo "Cluster already exists: $CLUSTER_NAME"
-                    else
-                      echo "Creating cluster: $CLUSTER_NAME"
-                      k3d cluster create "$CLUSTER_NAME" \
-                        --api-port 6550 \
-                        --agents 1 \
-                        -p "30080:30080@loadbalancer" \
-                        --network devops-net
-                    fi
-                    echo "Waiting for cluster to be ready..."
-                    sleep 15
-                    echo "Kubernetes nodes:"
-                    kubectl get nodes
-                '''
-            }
-        }
-
-        stage("Deploy to k3d") {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
@@ -135,10 +111,29 @@ pipeline {
                 )]) {
                     sh '''
                         set -euxo pipefail
+
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+
+                        CLUSTER_NAME="devops-cluster"
+
+                        echo "Checking k3d cluster..."
+                        if k3d cluster list | grep -q "$CLUSTER_NAME"; then
+                          echo "Cluster already exists: $CLUSTER_NAME"
+                        else
+                          echo "Creating cluster: $CLUSTER_NAME"
+                          k3d cluster create "$CLUSTER_NAME" \
+                            --api-port 6550 \
+                            --agents 1 \
+                            -p "30080:30080@loadbalancer" \
+                            --network devops-net
+                        fi
+
+                        # Replace image placeholder
                         sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
+
                         kubectl apply -f k8s/deployment.final.yaml
                         kubectl apply -f k8s/service.yaml
+
                         kubectl rollout status deployment/task-manager --timeout=120s
                     '''
                 }
@@ -155,14 +150,8 @@ pipeline {
     }
 
     post {
-        success { 
-            echo "Pipeline completed successfully!" 
-        }
-        failure { 
-            echo "Pipeline failed!" 
-        }
-        always { 
-            cleanWs() 
-        }
+        success { echo "Pipeline completed successfully!" }
+        failure { echo "Pipeline failed!" }
+        always  { cleanWs() }
     }
 }
