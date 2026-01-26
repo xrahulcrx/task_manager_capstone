@@ -49,7 +49,8 @@ pipeline {
                         set -euxo pipefail
                         sonar-scanner \
                           -Dsonar.projectKey=$APP_NAME \
-                          -Dsonar.sources=.
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://sonarqube:9000
                     '''
                 }
             }
