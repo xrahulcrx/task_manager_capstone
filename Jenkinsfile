@@ -111,13 +111,18 @@ pipeline {
                     passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
                     sh '''
-                        set -euxo pipefail
+                        set -eux
 
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
 
                         # Ensure cluster exists
                         k3d cluster list | grep -q devops-cluster || \
-                          k3d cluster create devops-cluster --api-port 6550 -p "30080:30080@loadbalancer"
+                        k3d cluster create devops-cluster --api-port 6550 -p "30080:30080@loadbalancer"
+
+                        k3d kubeconfig merge "$CLUSTER_NAME" --kubeconfig-switch-context
+
+                        kubectl cluster-info
+                        kubectl get nodes
 
                         # Replace image placeholder in deployment yaml
                         sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
