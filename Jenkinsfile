@@ -81,36 +81,27 @@ pipeline {
             }
         }
 
-        stage("Create k3d Cluster") {
+        stage("Push Docker Image") {
             steps {
-                sh '''
-                    set -euxo pipefail
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh '''
+                        set -euxo pipefail
+                        # === CRITICAL: LOGIN TO DOCKER HUB ===
+                        echo "Logging into Docker Hub as user: $DOCKERHUB_USER"
+                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
 
-                    CLUSTER_NAME="devops-cluster"
-
-                    echo "Checking k3d cluster..."
-                    if k3d cluster list | grep -q "$CLUSTER_NAME"; then
-                      echo "Cluster already exists: $CLUSTER_NAME"
-                    else
-                      echo "Creating cluster: $CLUSTER_NAME"
-                      k3d cluster create "$CLUSTER_NAME" \
-                        --api-port 6550 \
-                        -p "30080:30080@loadbalancer"
-                    fi
-
-                    echo "Switching kubeconfig context..."
-                    k3d kubeconfig merge "$CLUSTER_NAME" --kubeconfig-switch-context
-
-                    echo "Showing k3d docker containers:"
-                    docker ps | grep k3d || true
-
-                    echo "Kubernetes nodes:"
-                    kubectl get nodes
-                '''
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+                        echo "Pushing image: $IMAGE_NAME:$IMAGE_TAG"
+                        docker push $IMAGE_NAME:$IMAGE_TAG
+                        docker push $IMAGE_NAME:latest
+                    '''
+                }
             }
         }
-
-
 
         stage("Deploy to k3d") {
             steps {
@@ -120,7 +111,7 @@ pipeline {
                     passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
                     sh '''
-                        set -eux
+                        set -euxo pipefail
 
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
 
