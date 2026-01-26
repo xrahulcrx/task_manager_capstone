@@ -112,7 +112,7 @@ pipeline {
                     sh '''
                         set -euxo pipefail
 
-                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAM
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME
 
                         CLUSTER_NAME="devops-cluster"
 
