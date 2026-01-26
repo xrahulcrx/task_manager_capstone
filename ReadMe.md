@@ -14,7 +14,7 @@ This project contains a full CI/CD pipeline using:
 
 ## Architecture Overview
 
-CI Flow
+CI/CD Flow
 
 1. Checkout code from GitHub
 
