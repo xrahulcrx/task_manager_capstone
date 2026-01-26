@@ -93,7 +93,6 @@ pipeline {
                         # === CRITICAL: LOGIN TO DOCKER HUB ===
                         echo "Logging into Docker Hub as user: $DOCKERHUB_USER"
                         echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
                         echo "Pushing image: $IMAGE_NAME:$IMAGE_TAG"
                         docker push $IMAGE_NAME:$IMAGE_TAG
@@ -103,36 +102,32 @@ pipeline {
             }
         }
 
-        stage("Deploy to k3d") {
+        stage("Create k3d Cluster") {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
-                    sh '''
-                        set -eux
+                sh '''
+                    set -euxo pipefail
 
-                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+                    CLUSTER_NAME="devops-cluster"
 
-                        # Ensure cluster exists
-                        k3d cluster list | grep -q devops-cluster || \
-                        k3d cluster create devops-cluster --api-port 6550 -p "30080:30080@loadbalancer"
+                    echo "Checking k3d cluster..."
+                    if k3d cluster list | grep -q "$CLUSTER_NAME"; then
+                      echo "Cluster already exists: $CLUSTER_NAME"
+                      # Just ensure we're using the right context
+                      kubectl config use-context k3d-$CLUSTER_NAME
+                    else
+                      echo "Creating cluster: $CLUSTER_NAME"
+                      k3d cluster create "$CLUSTER_NAME" \
+                        --api-port 6550 \
+                        -p "30080:30080@loadbalancer"
+                      # k3d automatically switches context on creation
+                    fi
 
-                        k3d kubeconfig merge "$CLUSTER_NAME" --kubeconfig-switch-context
+                    echo "Current kubectl context:"
+                    kubectl config current-context
 
-                        kubectl cluster-info
-                        kubectl get nodes
-
-                        # Replace image placeholder in deployment yaml
-                        sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
-
-                        kubectl apply -f k8s/deployment.final.yaml
-                        kubectl apply -f k8s/service.yaml
-
-                        kubectl rollout status deployment/task-manager
-                    '''
-                }
+                    echo "Kubernetes nodes:"
+                    kubectl get nodes
+                '''
             }
         }
 
