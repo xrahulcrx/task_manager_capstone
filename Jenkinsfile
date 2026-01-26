@@ -33,45 +33,12 @@ pipeline {
             }
         }
 
-        stage("Run Tests") {
+        stage("Run Poetry Tests") {
             steps {
                 sh '''
                     set -euxo pipefail
                     poetry run pytest -v
                 '''
-            }
-        }
-
-        stage("DockerHub Login") {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
-                    sh '''
-                        set -euxo pipefail
-                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                    '''
-                }
-            }
-        }
-
-        stage("Build Docker Image") {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
-                    sh '''
-                        set -euxo pipefail
-                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
-                        echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
-                        docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                        docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-                    '''
-                }
             }
         }
 
@@ -96,9 +63,15 @@ pipeline {
             }
         }
 
-        stage("Show SonarQube Dashboard Link") {
+        stage("Build Docker Image") {
             steps {
-                echo "SonarQube Dashboard: ${SONAR_BROWSER_URL}/dashboard?id=${APP_NAME}"
+                sh '''
+                    set -euxo pipefail
+                    IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+                    echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
+                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                    docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+                '''
             }
         }
 
@@ -149,10 +122,9 @@ pipeline {
             }
         }
 
-        
-
-        stage("App Link") {
+        stage("App Links") {
             steps {
+                echo "SonarQube Dashboard: ${SONAR_BROWSER_URL}/dashboard?id=${APP_NAME}"
                 echo "App URL: http://localhost:30080/docs"
                 echo "Tasks URL: http://localhost:30080/tasks"
             }
