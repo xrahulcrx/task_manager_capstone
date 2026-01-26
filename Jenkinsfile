@@ -127,7 +127,18 @@ pipeline {
                 )]) {
                     sh '''
                         set -euxo pipefail
+
+                        CLUSTER_NAME="devops-cluster"
                         IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
+
+                        mkdir -p /var/jenkins_home/.kube
+                        k3d kubeconfig get "$CLUSTER_NAME" > /var/jenkins_home/.kube/config
+
+                        sed -i "s|server: https://0.0.0.0:6550|server: https://k3d-${CLUSTER_NAME}-serverlb:6443|g" /var/jenkins_home/.kube/config
+                        export KUBECONFIG=/var/jenkins_home/.kube/config
+
+                        kubectl get nodes
+
                         sed "s|REPLACE_IMAGE|$IMAGE_NAME:$IMAGE_TAG|g" k8s/deployment.yaml > k8s/deployment.final.yaml
                         kubectl apply -f k8s/deployment.final.yaml
                         kubectl apply -f k8s/service.yaml
