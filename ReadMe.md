@@ -185,6 +185,18 @@ Script Path:Jenkinsfile
 Save → Build Now
 ```
 
+#### Enable Poll SCM (Auto Build on Git Changes)
+```
+Go to your Jenkins Job
+Task-Manager-Pipeline (your pipeline job)
+Click Configure - Under Build Triggers
+Tick Poll SCM
+Add schedule (cron)
+Example: poll every 2 minutes
+H/2 * * * *
+Save
+```
+
 ## Application URLs
 ### After successful deployment:
 #### SonarQube Dashboard:
@@ -198,4 +210,9 @@ http://localhost:30080/docs
 #### Tasks Application list view:
 ```
 http://localhost:30080/tasks
+```
+
+### Check published Repo
+```
+https://hub.docker.com/repository/docker/xrahulcrx/task-manager-fastapi/general
 ```
