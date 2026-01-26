@@ -112,16 +112,8 @@ pipeline {
                       echo "Cluster already exists: $CLUSTER_NAME"
                     else
                       echo "Creating cluster: $CLUSTER_NAME"
-                      k3d cluster create "$CLUSTER_NAME" \
-                        --api-port 6550 \
-                        --agents 1 \
-                        -p "30080:30080@loadbalancer" \
-                        --network devops-net
+                      k3d cluster create "$CLUSTER_NAME" --api-port 6550 --agents 1 -p "30080:30080@loadbalancer" --network devops-net
                     fi
-                    echo "Waiting for cluster to be ready..."
-                    sleep 15
-                    echo "Kubernetes nodes:"
-                    kubectl get nodes
                 '''
             }
         }
