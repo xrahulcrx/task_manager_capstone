@@ -112,15 +112,14 @@ pipeline {
                     echo "Checking k3d cluster..."
                     if k3d cluster list | grep -q "$CLUSTER_NAME"; then
                       echo "Cluster already exists: $CLUSTER_NAME"
-                      # Just ensure we're using the right context
-                      kubectl config use-context k3d-$CLUSTER_NAME
                     else
                       echo "Creating cluster: $CLUSTER_NAME"
                       k3d cluster create "$CLUSTER_NAME" \
                         --api-port 6550 \
                         -p "30080:30080@loadbalancer"
-                      # k3d automatically switches context on creation
                     fi
+
+                    k3d kubeconfig merge "$CLUSTER_NAME" --kubeconfig-switch-context
 
                     echo "Current kubectl context:"
                     kubectl config current-context
