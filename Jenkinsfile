@@ -76,6 +76,24 @@ pipeline {
                         echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
                         docker build -t $IMAGE_NAME:$IMAGE_TAG .
                         docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+                    '''
+                }
+            }
+        }
+
+        stage("Push Docker Image") {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh '''
+                        # === CRITICAL: LOGIN TO DOCKER HUB ===
+                        echo "Logging into Docker Hub as user: $DOCKERHUB_USER"
+                        echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                        set -euxo pipefail
+                        IMAGE_NAME="$DOCKERHUB_USER/$APP_NAME"
                         echo "Pushing image: $IMAGE_NAME:$IMAGE_TAG"
                         docker push $IMAGE_NAME:$IMAGE_TAG
                         docker push $IMAGE_NAME:latest
