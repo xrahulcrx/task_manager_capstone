@@ -14,7 +14,7 @@ This project contains a full CI/CD pipeline using:
 
 ## Architecture Overview
 
-CI/CD Flow
+CI Flow
 
 1. Checkout code from GitHub
 
@@ -90,6 +90,11 @@ cd task_manager_capstone/infra
 ```
 chmod +x start.sh
 ./start.sh
+```
+
+#### Run Manually to compose the docker
+```
+docker compose up -d --build
 ```
 
 #### Checks
