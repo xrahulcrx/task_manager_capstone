@@ -99,7 +99,7 @@ pipeline {
                     fi
 
                     echo "Switching kubeconfig context..."
-                    k3d kubeconfig merge "$CLUSTER_NAME" --switch-context
+                    k3d kubeconfig merge "$CLUSTER_NAME" --kubeconfig-switch-context
 
                     echo "Showing k3d docker containers:"
                     docker ps | grep k3d || true
